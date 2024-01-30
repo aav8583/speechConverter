@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Speech Recognition</title>
+</head>
+<body>
+<button id="start-btn">Start recording speech</button>
+<p id="transcript"></p>
+
+<script>
+    const startBtn = document.getElementById('start-btn');
+    const transcript = document.getElementById('transcript');
+
+    let recognition;
+
+    // Проверяем поддержку Web Speech API
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = 'ru-RU'; // Устанавливаем язык распознавания
+        recognition.interimResults = false; // Получаем только финальные результаты
+
+        recognition.onresult = function (event) {
+            const result = event.results[0][0].transcript;
+            transcript.textContent = result;
+
+            // Отправка результата на сервер
+            sendDataToServer(result);
+        };
+
+        recognition.onerror = function (event) {
+            console.error('Ошибка распознавания речи: ', event.error);
+        };
+    } else {
+        alert('Ваш браузер не поддерживает Web Speech API');
+    }
+
+    startBtn.addEventListener('click', function () {
+        recognition.start();
+    });
+
+    function sendDataToServer(data) {
+        // Здесь вы можете добавить код для отправки данных на сервер
+        console.log('Отправляемые данные:', data);
+        // Пример:
+        fetch('/api/voice-to-text', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({speech: data})
+        });
+    }
+</script>
+</body>
+</html>
