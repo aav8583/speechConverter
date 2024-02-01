@@ -1,0 +1,17 @@
+server:
+  port: 8080
+  tomcat:
+    max-swallow-size: 10485760
+    max-http-form-post-size: -1
+
+logging:
+  level:
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging.handler.annotation.support: DEBUG
+    org.springframework.web.socket.messaging: DEBUG
+
+spring:
+  websocket:
+    sockjs:
+      stream-bytes-limit: 512000  # ?????????? ??????? ?????? ?????? SockJS
+    message-buffersize: 512000
