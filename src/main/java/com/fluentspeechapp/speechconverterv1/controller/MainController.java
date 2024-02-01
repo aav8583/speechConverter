@@ -2,13 +2,19 @@ package com.fluentspeechapp.speechconverterv1.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 public class MainController {
 
-    @GetMapping
+    @GetMapping("simple")
     public String getMainPage() {
-        return "forward:/html/main.html";
+        return "forward:/html/simple.html";
+    }
+
+    @GetMapping("websocket")
+    public String getWebSocket() {
+        return "forward:/html/websocket.html";
     }
 
 }
