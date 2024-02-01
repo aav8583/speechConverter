@@ -30,6 +30,10 @@ dependencies {
     implementation 'com.google.cloud:google-cloud-speech:4.27.0'
     implementation 'org.springframework.boot:spring-boot-starter-websocket:3.2.2'
 
+    implementation 'net.sf.phat:sphinx4-core:5prealpha'
+    implementation 'net.sf.phat:sphinx4-data:5prealpha'
+
+
 }
 
 tasks.named('test') {

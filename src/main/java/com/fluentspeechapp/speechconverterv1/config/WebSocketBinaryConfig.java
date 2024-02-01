@@ -1,5 +1,6 @@
 package com.fluentspeechapp.speechconverterv1.config;
 
+import com.fluentspeechapp.speechconverterv1.service.BinaryWebSocketHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.WebSocketHandler;
@@ -19,6 +20,4 @@ public class WebSocketBinaryConfig implements WebSocketConfigurer {
         registry.addHandler(myBinaryWebSocketHandler(), "/binary-speech-websocket")
                 .setAllowedOrigins("*");
     }
-
-
 }
