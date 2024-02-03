@@ -1,9 +1,11 @@
 package com.fluentspeechapp.speechconverterv1.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.Arrays;
@@ -12,11 +14,23 @@ import java.util.Map;
 @Controller
 public class SpeechWebSocketController {
 
+    @Autowired
+    private SimpMessagingTemplate template;
+
     @MessageMapping("/speech")
     public void handleSpeech(String message) {
         System.err.println("TEST");
         System.out.println(message);
+        broadcastText(message);
     }
+
+
+
+    // вызовите этот метод, чтобы отправить сообщение всем подписчикам на "/topic/speechresults"
+    public void broadcastText(String text) {
+        template.convertAndSend("/topic/speechresults", text);
+    }
+
 }
 
 //

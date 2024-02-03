@@ -17,6 +17,13 @@
         stompClient = Stomp.over(socket);
         stompClient.connect({}, function(frame) {
             console.log('Connected: ' + frame);
+
+            // Подписка на канал получения переведенного текста с сервера
+            stompClient.subscribe('/topic/speechresults', function(messageOutput) {
+                var translatedText = messageOutput.body;
+                console.log('Received translated text:', translatedText);
+                speakText(translatedText);
+            });
         });
     }
 
@@ -49,6 +56,15 @@
         document.getElementById('start-recording-btn').disabled = false;
         document.getElementById('stop-recording-btn').disabled = true;
     });
+
+
+    // Функция для воспроизведения текста
+    function speakText(text) {
+        var utterance = new SpeechSynthesisUtterance(text);
+        // Вы можете установить язык и другие свойства utterance здесь, если это необходимо
+        // utterance.lang = 'ru-RU'; // Например, для русского языка
+        speechSynthesis.speak(utterance);
+    }
 
     connect();
 </script>
