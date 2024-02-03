@@ -36,7 +36,10 @@
             alert('Browser does not support audio recording.');
             return;
         }
-        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        navigator.mediaDevices.getUserMedia({
+            audio: { sampleRate: 16000 },
+            video: false })
+        // navigator.mediaDevices.getUserMedia({ audio: true, video: false })
             .then(function(stream) {
                 const options = { mimeType: 'audio/webm;codecs=opus' };
                 mediaRecorder = new MediaRecorder(stream, options);
@@ -49,7 +52,7 @@
                         socket.send(event.data);
                     }
                 };
-                var timeslice = 1000; // Генерация данных каждую секунду
+                var timeslice = 3000; // Генерация данных каждую секунду
                 mediaRecorder.start(timeslice);
                 isRecording = true;
                 document.getElementById('start-recording-btn').disabled = true;
