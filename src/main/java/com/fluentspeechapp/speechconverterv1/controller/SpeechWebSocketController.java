@@ -13,12 +13,9 @@ import java.util.Map;
 public class SpeechWebSocketController {
 
     @MessageMapping("/speech")
-    public void handleSpeech(@Payload byte[] message) {
-        // Преобразуйте бинарные данные в формат, который можно обработать
-//        System.out.println("Received binary message of size: " + message.length);
-        String str = new String(message);
-        System.out.println(str);
-        // здесь логика обработки бинарных данных
+    public void handleSpeech(String message) {
+        System.err.println("TEST");
+        System.out.println(message);
     }
 }
 

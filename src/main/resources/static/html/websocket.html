@@ -10,143 +10,47 @@
 <button id="start-recording-btn">Start record</button>
 <button id="stop-recording-btn" disabled>Stop record</button>
 <script>
-    var socket;
-    var isRecording = false;
-    var mediaRecorder = null;
+    var stompClient = null;
 
     function connect() {
-        socket = new WebSocket('ws://' + window.location.host + '/binary-speech-websocket');
-        socket.binaryType = 'blob'; // Устанавливаем тип бинарных данных
-
-        socket.onopen = function() {
-            console.log('WebSocket connection established');
-        };
-
-        socket.onclose = function(event) {
-            console.log('WebSocket connection closed', event);
-        };
-
-        socket.onerror = function(error) {
-            console.error('WebSocket error observed', error);
-        };
+        var socket = new SockJS('/speech-websocket');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function(frame) {
+            console.log('Connected: ' + frame);
+        });
     }
 
-    function startRecording() {
-        if (!navigator.mediaDevices) {
-            alert('Browser does not support audio recording.');
-            return;
+    var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = function(event) {
+        var last = event.results.length - 1;
+        var text = event.results[last][0].transcript;
+        console.log('Recognized text: ', text);
+
+        if (stompClient && stompClient.connected) {
+            stompClient.send("/app/speech", {}, text);
         }
-        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-            .then(function(stream) {
-                const options = { mimeType: 'audio/webm;codecs=opus' };
-                mediaRecorder = new MediaRecorder(stream, options);
-                mediaRecorder.onstart = function() {
-                    console.log('Recording started');
-                };
-                mediaRecorder.ondataavailable = function(event) {
-                    console.log('ondataavailable event triggered');
-                    if (isRecording && event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
-                        socket.send(event.data);
-                    }
-                };
-                var timeslice = 1000; // Генерация данных каждую секунду
-                mediaRecorder.start(timeslice);
-                isRecording = true;
-                document.getElementById('start-recording-btn').disabled = true;
-                document.getElementById('stop-recording-btn').disabled = false;
-            })
-            .catch(function(err) {
-                console.error('Could not start audio recording: ', err);
-            });
-    }
+    };
 
-    function stopRecording() {
-        if (!mediaRecorder) return;
-        mediaRecorder.stop();
-        isRecording = false;
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error', event);
+    };
+
+    document.getElementById('start-recording-btn').addEventListener('click', function() {
+        recognition.start();
+        document.getElementById('start-recording-btn').disabled = true;
+        document.getElementById('stop-recording-btn').disabled = false;
+    });
+
+    document.getElementById('stop-recording-btn').addEventListener('click', function() {
+        recognition.stop();
         document.getElementById('start-recording-btn').disabled = false;
         document.getElementById('stop-recording-btn').disabled = true;
-    }
-
-    document.getElementById('start-recording-btn').addEventListener('click', startRecording);
-    document.getElementById('stop-recording-btn').addEventListener('click', stopRecording);
+    });
 
     connect();
 </script>
 </body>
 </html>
-<!--<script>-->
-<!--    var stompClient = null;-->
-<!--    var isRecording = false;-->
-<!--    var mediaRecorder = null;-->
-
-<!--    function connect() {-->
-<!--        var socket = new SockJS('/speech-websocket');-->
-<!--        stompClient = Stomp.over(socket);-->
-<!--        stompClient.connect({}, function(frame) {-->
-<!--            console.log('Connected: ' + frame);-->
-<!--        });-->
-<!--    }-->
-
-<!--    function startRecording() {-->
-<!--        if (!navigator.mediaDevices) {-->
-<!--            alert('Browser does not support audio recording.');-->
-<!--            return;-->
-<!--        }-->
-<!--        navigator.mediaDevices.getUserMedia({ audio: true, video: false })-->
-<!--            .then(function(stream) {-->
-<!--                const options = { mimeType: 'audio/webm;codecs=opus' }; //этого не было-->
-<!--                mediaRecorder = new MediaRecorder(stream, options);  //тут без options-->
-<!--                mediaRecorder.onstart = function() {-->
-<!--                    console.log('Recording started');-->
-<!--                };-->
-<!--                mediaRecorder.ondataavailable = function(event) {-->
-<!--                    console.log('ondataavailable event triggered');-->
-<!--                    if (isRecording && stompClient) {-->
-<!--                        // Отправляем бинарные данные напрямую, без преобразования в строку-->
-<!--                        stompClient.send("/app/speech", {}, event.data);-->
-<!--                    }-->
-<!--                };-->
-<!--                // mediaRecorder.ondataavailable = function(event) {-->
-<!--                //     console.log('ondataavailable event triggered');-->
-<!--                //     if (isRecording && event.data.size > 0 && stompClient) {-->
-<!--                //         var reader = new FileReader();-->
-<!--                //         reader.onload = function(evt) {-->
-<!--                //             console.log('FileReader onload event triggered');-->
-<!--                //             if (evt.target.readyState == FileReader.DONE) { // DONE == 2-->
-<!--                //                 var arrayBuffer = evt.target.result;-->
-<!--                //                 var array = new Uint8Array(arrayBuffer);-->
-<!--                //                 var data = array.join(",");-->
-<!--                //                 console.log('Sending data', data);-->
-<!--                //                 stompClient.send("/app/speech", {}, data);-->
-<!--                //             }-->
-<!--                //         };-->
-<!--                //         reader.readAsArrayBuffer(event.data);-->
-<!--                //     }-->
-<!--                // };-->
-<!--                var timeslice = 1000;-->
-<!--                mediaRecorder.start(timeslice);-->
-<!--                isRecording = true;-->
-<!--                document.getElementById('start-recording-btn').disabled = true;-->
-<!--                document.getElementById('stop-recording-btn').disabled = false;-->
-<!--            })-->
-<!--            .catch(function(err) {-->
-<!--                console.error('Could not start audio recording: ', err);-->
-<!--            });-->
-<!--    }-->
-
-<!--    function stopRecording() {-->
-<!--        if (!mediaRecorder) return;-->
-<!--        mediaRecorder.stop();-->
-<!--        isRecording = false;-->
-<!--        document.getElementById('start-recording-btn').disabled = false;-->
-<!--        document.getElementById('stop-recording-btn').disabled = true;-->
-<!--    }-->
-
-<!--    document.getElementById('start-recording-btn').addEventListener('click', startRecording);-->
-<!--    document.getElementById('stop-recording-btn').addEventListener('click', stopRecording);-->
-
-<!--    connect();-->
-<!--</script>-->
-<!--</body>-->
-<!--</html>-->

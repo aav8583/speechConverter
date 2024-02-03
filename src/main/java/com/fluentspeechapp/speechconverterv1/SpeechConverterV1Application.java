@@ -6,8 +6,8 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 
 @SpringBootApplication
-//@EnableWebSocketMessageBroker
-@EnableWebSocket
+@EnableWebSocketMessageBroker
+//@EnableWebSocket
 public class SpeechConverterV1Application {
 
     public static void main(String[] args) {
