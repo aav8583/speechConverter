@@ -1,5 +1,8 @@
 package com.fluentspeechapp.speechconverterv1.controller;
 
+import com.fluentspeechapp.speechconverterv1.model.request.YandexTranslateRequest;
+import com.fluentspeechapp.speechconverterv1.model.response.YandexTranslateResponse;
+import com.fluentspeechapp.speechconverterv1.service.TranslateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -9,6 +12,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -17,11 +21,29 @@ public class SpeechWebSocketController {
     @Autowired
     private SimpMessagingTemplate template;
 
+    private final TranslateService translateService;
+
+    public SpeechWebSocketController(TranslateService translateService) {
+        this.translateService = translateService;
+    }
+
     @MessageMapping("/speech")
     public void handleSpeech(String message) {
-        System.err.println("TEST");
-        System.out.println(message);
-        broadcastText(message);
+//        System.err.println("TEST");
+//        System.out.println(message);
+        YandexTranslateRequest yandexTranslateRequest = new YandexTranslateRequest();
+        yandexTranslateRequest.setSourceLanguageCode("ru");
+        yandexTranslateRequest.setTargetLanguageCode("en");
+        yandexTranslateRequest.setTexts(List.of(message));
+        YandexTranslateResponse response = translateService.translate(yandexTranslateRequest);
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (int i = 0; i < response.getTranslations().size(); i++) {
+            stringBuilder.append(response.getTranslations().get(i).getText());
+            stringBuilder.append(" ");
+        }
+        String translatedResponse = stringBuilder.toString();
+        broadcastText(translatedResponse);
     }
 
 

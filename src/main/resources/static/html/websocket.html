@@ -21,7 +21,6 @@
             // Подписка на канал получения переведенного текста с сервера
             stompClient.subscribe('/topic/speechresults', function(messageOutput) {
                 var translatedText = messageOutput.body;
-                console.log('Received translated text:', translatedText);
                 speakText(translatedText);
             });
         });
@@ -34,7 +33,6 @@
     recognition.onresult = function(event) {
         var last = event.results.length - 1;
         var text = event.results[last][0].transcript;
-        console.log('Recognized text: ', text);
 
         if (stompClient && stompClient.connected) {
             stompClient.send("/app/speech", {}, text);
