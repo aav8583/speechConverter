@@ -28,13 +28,16 @@
 
     var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
+    recognition.lang = 'sr-RS';
+    recognition.maxAlternatives
 
     recognition.onresult = function(event) {
         var last = event.results.length - 1;
         var text = event.results[last][0].transcript;
 
         if (stompClient && stompClient.connected) {
+            console.log(text)
             stompClient.send("/app/speech", {}, text);
         }
     };
@@ -59,6 +62,8 @@
     // Функция для воспроизведения текста
     function speakText(text) {
         var utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 2;
+        utterance.pitch = -50;
         // Вы можете установить язык и другие свойства utterance здесь, если это необходимо
         // utterance.lang = 'ru-RU'; // Например, для русского языка
         speechSynthesis.speak(utterance);

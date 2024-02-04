@@ -23,7 +23,7 @@ public class TranslateServiceImpl implements TranslateService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.set("Authorization", "Api-Key ");
+        headers.set("Authorization", "Api-Key AQVN29x91IQkXLehpiCY77hUfzeJbdEbk4PHU6fo");
 
         HttpEntity<YandexTranslateRequest> entity = new HttpEntity<>(request, headers);
 
