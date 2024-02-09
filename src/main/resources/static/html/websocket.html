@@ -11,6 +11,8 @@
 <button id="stop-recording-btn" disabled>Stop record</button>
 <script>
     var stompClient = null;
+    var recognizedText = ''; // Текст, распознанный за текущий интервал
+    var buffer = ''; // Буфер для накопления текста до отправки
 
     function connect() {
         var socket = new SockJS('/speech-websocket');
@@ -29,18 +31,29 @@
     var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'sr-RS';
-    recognition.maxAlternatives
+    recognition.lang = 'en-EN';
 
     recognition.onresult = function(event) {
         var last = event.results.length - 1;
         var text = event.results[last][0].transcript;
 
-        if (stompClient && stompClient.connected) {
-            console.log(text)
-            stompClient.send("/app/speech", {}, text);
+        if (stompClient?.connected) {
+            recognizedText += text;
+            buffer += recognizedText;
+            setInterval(sendText, 5000);
         }
     };
+
+    function sendText() {
+        if (buffer.length > 0) {
+            console.log(buffer)
+            stompClient.send("/app/speech", {}, buffer);
+            recognizedText = ''; // Очистка распознанного текста после отправки
+            buffer = ''; // Очистка буфера после отправки
+        }
+    }
+
+
 
     recognition.onerror = function(event) {
         console.error('Speech recognition error', event);
@@ -64,8 +77,6 @@
         var utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 2;
         utterance.pitch = -50;
-        // Вы можете установить язык и другие свойства utterance здесь, если это необходимо
-        // utterance.lang = 'ru-RU'; // Например, для русского языка
         speechSynthesis.speak(utterance);
     }
 
