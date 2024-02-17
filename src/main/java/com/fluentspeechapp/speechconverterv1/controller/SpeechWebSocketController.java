@@ -58,6 +58,7 @@ public class SpeechWebSocketController {
         synchronized (this) {
             bufferedText += message + " ";
             System.err.println(bufferedText);
+            translated(bufferedText);
             bufferedText = "";
 //            if (silenceFuture == null || silenceFuture.isCancelled() || silenceFuture.isDone()) {
 //                silenceFuture = scheduler.schedule(() -> {

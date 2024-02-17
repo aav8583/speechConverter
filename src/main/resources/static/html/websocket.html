@@ -20,7 +20,6 @@
         stompClient = Stomp.over(socket);
         stompClient.connect({}, function(frame) {
             console.log('Connected: ' + frame);
-            // Подписка на канал получения переведенного текста с сервера
             stompClient.subscribe('/topic/speechresults', function(messageOutput) {
                 var translatedText = messageOutput.body;
                 speakText(translatedText);
@@ -30,25 +29,26 @@
 
     var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.continuous = true;
-    recognition.interimResults = false; // Теперь мы хотим только финальные результаты
-    recognition.lang = 'ru-RU';
+    recognition.interimResults = false;
+    recognition.lang = 'en-EN';
 
     recognition.onresult = function(event) {
         if (event.results[event.results.length - 1].isFinal) {
             var text = event.results[event.results.length - 1][0].transcript;
             recognizedText += text;
             buffer += recognizedText;
-            // Не вызываем sendText здесь, так как это будет сделано по таймеру
         }
     };
 
     recognition.onend = function() {
         // Отправка текста при остановке распознавания
         sendText();
-        // Перезапуск распознавания, если кнопка стоп не была нажата
-        if (!document.getElementById('stop-recording-btn').disabled) {
-            recognition.start();
-        }
+        // Перезапуск распознавания с задержкой в 100 миллисекунд
+        setTimeout(function() {
+            if (!document.getElementById('stop-recording-btn').disabled) {
+                recognition.start();
+            }
+        }, 1);
     };
 
     function sendText() {
@@ -67,7 +67,7 @@
         // Устанавливаем интервал для остановки и перезапуска распознавания
         sendIntervalId = setInterval(function() {
             recognition.stop(); // Остановка вызовет срабатывание onend и отправку текста
-        }, 3000);
+        }, 5000);
     });
 
     document.getElementById('stop-recording-btn').addEventListener('click', function() {
