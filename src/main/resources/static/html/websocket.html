@@ -13,13 +13,13 @@
     var stompClient = null;
     var recognizedText = ''; // Текст, распознанный за текущий интервал
     var buffer = ''; // Буфер для накопления текста до отправки
+    var sendIntervalId = null; // ID интервала для отправки текста
 
     function connect() {
         var socket = new SockJS('/speech-websocket');
         stompClient = Stomp.over(socket);
         stompClient.connect({}, function(frame) {
             console.log('Connected: ' + frame);
-
             // Подписка на канал получения переведенного текста с сервера
             stompClient.subscribe('/topic/speechresults', function(messageOutput) {
                 var translatedText = messageOutput.body;
@@ -30,47 +30,52 @@
 
     var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-EN';
+    recognition.interimResults = false; // Теперь мы хотим только финальные результаты
+    recognition.lang = 'ru-RU';
 
     recognition.onresult = function(event) {
-        var last = event.results.length - 1;
-        var text = event.results[last][0].transcript;
-
-        if (stompClient?.connected) {
+        if (event.results[event.results.length - 1].isFinal) {
+            var text = event.results[event.results.length - 1][0].transcript;
             recognizedText += text;
             buffer += recognizedText;
-            setInterval(sendText, 5000);
+            // Не вызываем sendText здесь, так как это будет сделано по таймеру
+        }
+    };
+
+    recognition.onend = function() {
+        // Отправка текста при остановке распознавания
+        sendText();
+        // Перезапуск распознавания, если кнопка стоп не была нажата
+        if (!document.getElementById('stop-recording-btn').disabled) {
+            recognition.start();
         }
     };
 
     function sendText() {
         if (buffer.length > 0) {
-            console.log(buffer)
+            console.log(buffer);
             stompClient.send("/app/speech", {}, buffer);
             recognizedText = ''; // Очистка распознанного текста после отправки
             buffer = ''; // Очистка буфера после отправки
         }
     }
 
-
-
-    recognition.onerror = function(event) {
-        console.error('Speech recognition error', event);
-    };
-
     document.getElementById('start-recording-btn').addEventListener('click', function() {
         recognition.start();
         document.getElementById('start-recording-btn').disabled = true;
         document.getElementById('stop-recording-btn').disabled = false;
+        // Устанавливаем интервал для остановки и перезапуска распознавания
+        sendIntervalId = setInterval(function() {
+            recognition.stop(); // Остановка вызовет срабатывание onend и отправку текста
+        }, 3000);
     });
 
     document.getElementById('stop-recording-btn').addEventListener('click', function() {
+        clearInterval(sendIntervalId); // Очищаем интервал, чтобы он не вызывал stop после нажатия кнопки
         recognition.stop();
         document.getElementById('start-recording-btn').disabled = false;
         document.getElementById('stop-recording-btn').disabled = true;
     });
-
 
     // Функция для воспроизведения текста
     function speakText(text) {

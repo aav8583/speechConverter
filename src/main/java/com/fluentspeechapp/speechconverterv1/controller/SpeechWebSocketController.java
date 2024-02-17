@@ -57,20 +57,22 @@ public class SpeechWebSocketController {
     public void handleSpeech(String message) {
         synchronized (this) {
             bufferedText += message + " ";
-            if (silenceFuture == null || silenceFuture.isCancelled() || silenceFuture.isDone()) {
-                silenceFuture = scheduler.schedule(() -> {
-                    String text;
-                    synchronized (this) {
-                        text = levenshteinService.handleMessage(bufferedText.trim());
-                        bufferedText = "";
-                    }
-                    Date date=new Date(System.currentTimeMillis());
-                    System.out.println(date);
-                    System.err.println(text);
-//                    translated(text);
-                    silenceFuture = null; // Сброс future после выполнения
-                }, 5, TimeUnit.SECONDS);
-            }
+            System.err.println(bufferedText);
+            bufferedText = "";
+//            if (silenceFuture == null || silenceFuture.isCancelled() || silenceFuture.isDone()) {
+//                silenceFuture = scheduler.schedule(() -> {
+//                    String text;
+//                    synchronized (this) {
+//                        text = levenshteinService.handleMessage(bufferedText.trim());
+//                        bufferedText = "";
+//                    }
+//                    Date date=new Date(System.currentTimeMillis());
+//                    System.out.println(date);
+//                    System.err.println(text);
+////                    translated(text);
+//                    silenceFuture = null; // Сброс future после выполнения
+//                }, 5, TimeUnit.SECONDS);
+//            }
         }
     }
 
