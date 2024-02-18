@@ -1,5 +1,6 @@
 package com.fluentspeechapp.speechconverterv1.controller;
 
+import com.fluentspeechapp.speechconverterv1.model.request.MessageDataRequest;
 import com.fluentspeechapp.speechconverterv1.model.request.YandexTranslateRequest;
 import com.fluentspeechapp.speechconverterv1.model.response.YandexTranslateResponse;
 import com.fluentspeechapp.speechconverterv1.service.LevenshteinService;
@@ -54,11 +55,11 @@ public class SpeechWebSocketController {
     }
 
     @MessageMapping("/speech")
-    public void handleSpeech(String message) {
+    public void handleSpeech(MessageDataRequest messageDataRequest) {
         synchronized (this) {
-            bufferedText += message + " ";
-            System.err.println(bufferedText);
-            translated(bufferedText);
+            bufferedText += messageDataRequest.getText() + " ";
+            System.err.println(messageDataRequest);
+            translated(messageDataRequest);
             bufferedText = "";
 //            if (silenceFuture == null || silenceFuture.isCancelled() || silenceFuture.isDone()) {
 //                silenceFuture = scheduler.schedule(() -> {
@@ -102,11 +103,11 @@ public class SpeechWebSocketController {
         template.convertAndSend("/topic/speechresults", text);
     }
 
-    private void translated(String message) {
+    private void translated(MessageDataRequest messageDataRequest) {
         YandexTranslateRequest yandexTranslateRequest = new YandexTranslateRequest();
-        yandexTranslateRequest.setSourceLanguageCode("en");
-        yandexTranslateRequest.setTargetLanguageCode("ru");
-        yandexTranslateRequest.setTexts(List.of(message));
+        yandexTranslateRequest.setSourceLanguageCode(messageDataRequest.chooseLanguage(messageDataRequest.getRecognitionLang()));
+        yandexTranslateRequest.setTargetLanguageCode(messageDataRequest.chooseLanguage(messageDataRequest.getTranslatedLang()));
+        yandexTranslateRequest.setTexts(List.of(messageDataRequest.getText()));
         YandexTranslateResponse response = translateService.translate(yandexTranslateRequest);
         StringBuilder stringBuilder = new StringBuilder();
 

@@ -7,6 +7,21 @@
 </head>
 <body>
 <h1>Speech Recognition with Websockets</h1>
+<div>
+<label for="recognition-lang">Recognition Language:</label>
+<select id="recognition-lang">
+    <option value="en-EN">English</option>
+    <option value="ru-RU">Russian</option>
+    <option value="sr-SR">Serbian</option>
+</select>
+
+<label for="translated-lang">Translated Language:</label>
+<select id="translated-lang">
+    <option value="en-EN">English</option>
+    <option value="ru-RU">Russian</option>
+    <option value="sr-SR">Serbian</option>
+</select>
+</div>
 <button id="start-recording-btn">Start record</button>
 <button id="stop-recording-btn" disabled>Stop record</button>
 <script>
@@ -30,7 +45,6 @@
     var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.continuous = true;
     recognition.interimResults = false;
-    recognition.lang = 'en-EN';
 
     recognition.onresult = function(event) {
         if (event.results[event.results.length - 1].isFinal) {
@@ -53,14 +67,29 @@
 
     function sendText() {
         if (buffer.length > 0) {
-            console.log(buffer);
-            stompClient.send("/app/speech", {}, buffer);
+            // Чтение выбранного языка синтеза речи
+            var selectedTranslatedLang = document.getElementById('translated-lang').value;
+
+            // Создание объекта с текстом и языком
+            var messageData = {
+                text: buffer,
+                recognitionLang: recognition.lang,
+                translatedLang: selectedTranslatedLang
+            };
+
+            // Преобразование объекта в строку JSON для отправки
+            var messageDataString = JSON.stringify(messageData);
+
+            stompClient.send("/app/speech", {}, messageDataString);
             recognizedText = ''; // Очистка распознанного текста после отправки
             buffer = ''; // Очистка буфера после отправки
         }
     }
 
     document.getElementById('start-recording-btn').addEventListener('click', function() {
+        // Чтение и установка выбранного языка распознавания
+        var selectedRecognitionLang = document.getElementById('recognition-lang').value;
+        recognition.lang = selectedRecognitionLang;
         recognition.start();
         document.getElementById('start-recording-btn').disabled = true;
         document.getElementById('stop-recording-btn').disabled = false;
@@ -80,8 +109,8 @@
     // Функция для воспроизведения текста
     function speakText(text) {
         var utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 2;
-        utterance.pitch = -50;
+        utterance.rate = 1.8;
+        utterance.pitch = 1.9;
         speechSynthesis.speak(utterance);
     }
 
